@@ -1800,5 +1800,37 @@ setInterval(()=>{
 })();
 
 </script>
-</body>
+<script>
+    const AudioEngine = {
+        ctx: null, osc: null, gain: null,
+        init() {
+            if(this.ctx) return;
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            this.osc = this.ctx.createOscillator();
+            this.gain = this.ctx.createGain();
+            this.osc.type = 'sine';
+            this.osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+            this.gain.gain.setValueAtTime(0, this.ctx.currentTime);
+            this.osc.connect(this.gain);
+            this.gain.connect(this.ctx.destination);
+            this.osc.start();
+            console.log('🔊 Neural Audio Core Online');
+        },
+        triggerBurst() {
+            this.init();
+            const now = this.ctx.currentTime;
+            this.gain.gain.cancelScheduledValues(now);
+            this.gain.gain.setValueAtTime(0.1, now);
+            this.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+            this.osc.frequency.setValueAtTime(880, now);
+            this.osc.frequency.exponentialRampToValueAtTime(110, now + 0.5);
+        }
+    };
+    
+    // Hooking into existing buttons automatically
+    window.addEventListener('load', () => {
+        const btns = document.querySelectorAll('.btn, .ctrl-btn, button');
+        btns.forEach(b => b.addEventListener('click', () => AudioEngine.triggerBurst()));
+    });
+    </script></body>
 </html>
