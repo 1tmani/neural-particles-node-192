@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ONE MILLION PARTICLES — Living Universe</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --c1:#00f5ff;--c2:#bf00ff;--c3:#ff0090;--c4:#00ff88;--c5:#ffd700;
+    --bg:#02040a;--text:#e0e8ff;
+  }
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--bg)}
+  canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%}
+  #ui{position:fixed;z-index:10;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:28px 36px}
+  .top-row{display:flex;justify-content:space-between;align-items:flex-start}
+  .brand{font-family:'Courier New',monospace;font-size:0.7rem;letter-spacing:0.3em;color:rgba(0,245,255,0.5);text-transform:uppercase}
+  .brand span{display:block;font-size:1.2rem;font-weight:900;color:var(--c1);letter-spacing:0.15em;margin-bottom:4px}
+  .live-stats{font-family:'Courier New',monospace;font-size:0.65rem;letter-spacing:0.2em;color:rgba(0,245,255,0.4);text-align:right;line-height:2.2}
+  .live-stats strong{color:var(--c1)}
+  .controls{pointer-events:all;display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .btn{padding:9px 20px;background:transparent;border:1px solid rgba(0,245,255,0.3);color:rgba(0,245,255,0.7);font-family:'Courier New',monospace;font-size:0.65rem;letter-spacing:0.2em;cursor:pointer;border-radius:4px;transition:all 0.3s;text-transform:uppercase}
+  .btn:hover{border-color:var(--c1);color:var(--c1);background:rgba(0,245,255,0.05);box-shadow:0 0 20px rgba(0,245,255,0.2)}
+  .btn.active{border-color:var(--c1);color:var(--c1);background:rgba(0,245,255,0.08)}
+  .btn.b2{border-color:rgba(191,0,255,0.3);color:rgba(191,0,255,0.7)}
+  .btn.b2:hover,.btn.b2.active{border-color:var(--c2);color:var(--c2);background:rgba(191,0,255,0.05);box-shadow:0 0 20px rgba(191,0,255,0.2)}
+  .btn.b3{border-color:rgba(255,0,144,0.3);color:rgba(255,0,144,0.7)}
+  .btn.b3:hover,.btn.b3.active{border-color:var(--c3);color:var(--c3);background:rgba(255,0,144,0.05)}
+  .btn.b4{border-color:rgba(0,255,136,0.3);color:rgba(0,255,136,0.7)}
+  .btn.b4:hover,.btn.b4.active{border-color:var(--c4);color:var(--c4);background:rgba(0,255,136,0.05)}
+  .center-info{pointer-events:none;text-align:center;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0;transition:opacity 1s}
+  .center-info.show{opacity:1}
+  .center-info h1{font-family:'Courier New',monospace;font-size:clamp(2rem,5vw,4.5rem);font-weight:900;letter-spacing:0.1em;background:linear-gradient(90deg,var(--c1),var(--c2),var(--c3),var(--c4));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:300%;animation:gs 4s linear infinite}
+  @keyframes gs{to{background-position:300% 0}}
+  .center-info p{font-family:'Courier New',monospace;font-size:0.75rem;letter-spacing:0.3em;color:rgba(0,245,255,0.4);margin-top:12px;text-transform:uppercase}
+  .bottom-bar{display:flex;justify-content:space-between;align-items:flex-end}
+  .mode-label{font-family:'Courier New',monospace;font-size:0.65rem;letter-spacing:0.25em;color:rgba(0,245,255,0.3)}
+  .mode-label strong{color:var(--c1);text-transform:uppercase}
+  .hz{font-family:'Courier New',monospace;font-size:0.6rem;letter-spacing:0.2em;color:rgba(0,245,255,0.2)}
+  .scroll-hint{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);font-family:'Courier New',monospace;font-size:0.6rem;letter-spacing:0.3em;color:rgba(0,245,255,0.25);animation:blink 2s ease-in-out infinite;pointer-events:none}
+  @keyframes blink{0%,100%{opacity:0.3}50%{opacity:1}}
+  #toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);border:1px solid rgba(0,245,255,0.2);color:var(--c1);font-family:'Courier New',monospace;font-size:0.7rem;letter-spacing:0.2em;padding:10px 24px;border-radius:4px;opacity:0;transition:opacity 0.4s;pointer-events:none;z-index:100}
+  #toast.show{opacity:1}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="ui">
+  <div class="top-row">
+    <div class="brand">
+      <span>ONE MILLION</span>
+      PARTICLE UNIVERSE · LIVING ENGINE
+    </div>
+    <div class="live-stats">
+      PARTICLES <strong id="s1">0</strong><br>
+      CONNECTIONS <strong id="s2">0</strong><br>
+      EVOLUTIONS <strong id="s3">0</strong><br>
+      FPS <strong id="s4">0</strong>
+    </div>
+  </div>
+  <div style="text-align:center">
+    <div class="controls">
+      <button class="btn active" id="bSwarm" onclick="setMode('swarm',this)">SWARM</button>
+      <button class="btn b2" id="bGalaxy" onclick="setMode('galaxy',this)">GALAXY SPIRAL</button>
+      <button class="btn b3" id="bChaos" onclick="setMode('chaos',this)">QUANTUM CHAOS</button>
+      <button class="btn b4" id="bCrystal" onclick="setMode('crystal',this)">CRYSTAL LATTICE</button>
+      <button class="btn" id="bExplode" onclick="explode()">⚡ EXPLODE</button>
+      <button class="btn b2" id="bAttract" onclick="toggleAttract()">ATTRACT MODE</button>
+      <button class="btn b3" onclick="cycleColor()">SHIFT SPECTRUM</button>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="mode-label">MODE: <strong id="modeLabel">SWARM</strong></div>
+    <div class="hz" id="hz">EVOLVING · 0ms PER CYCLE</div>
+  </div>
+</div>
+
+<div class="center-info" id="centerInfo">
+  <h1>ONE MILLION<br>PARTICLES</h1>
+  <p>Living · Learning · Evolving · Eternal</p>
+</div>
+
+<div class="scroll-hint">CLICK ANYWHERE TO INTERACT · DRAG TO ATTRACT</div>
+<div id="toast"></div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
+resize(); window.addEventListener('resize',resize);
+
+// Palette
+const PALETTES = [
+  ['#00f5ff','#bf00ff','#ff0090','#00ff88','#ffd700'],
+  ['#ff6b00','#ff0040','#ffcc00','#ff4080','#ff8c00'],
+  ['#00ff88','#00ffcc','#00f5ff','#00aaff','#0066ff'],
+  ['#bf00ff','#ff00cc','#7700ff','#ff0090','#cc00ff'],
+];
+let paletteIdx = 0;
+let COLS = [...PALETTES[0]];
+
+// Particle system
+const MAX = 1200; // display-optimized count
+let particles = [];
+let mode = 'swarm';
+let attractMode = false;
+let mouse = {x: W/2, y: H/2, down: false};
+let tick = 0, evolveCount = 0;
+let lastTime = 0, fps = 0, fpsArr = [];
+
+class P {
+  constructor(){this.reset()}
+  reset(){
+    this.x = Math.random()*W;
+    this.y = Math.random()*H;
+    this.ox = this.x; this.oy = this.y;
+    this.vx = (Math.random()-0.5)*2;
+    this.vy = (Math.random()-0.5)*2;
+    this.r = Math.random()*2.5+0.5;
+    this.c = COLS[Math.floor(Math.random()*COLS.length)];
+    this.a = Math.random()*Math.PI*2;
+    this.life = Math.random();
+    this.speed = Math.random()*1.5+0.3;
+    this.ang = Math.random()*Math.PI*2;
+    this.energy = Math.random();
+    this.cluster = Math.floor(Math.random()*8);
+    this.trail = [];
+  }
+}
+
+for(let i=0;i<MAX;i++) particles.push(new P());
+
+// Cluster centers
+let clusters = [];
+function buildClusters(){
+  clusters = [];
+  for(let i=0;i<8;i++){
+    clusters.push({x:W*0.1+Math.random()*W*0.8, y:H*0.1+Math.random()*H*0.8, vx:(Math.random()-0.5)*0.5, vy:(Math.random()-0.5)*0.5});
+  }
+}
+buildClusters();
+
+let exploding = false;
+
+function setMode(m, btn){
+  mode = m;
+  document.querySelectorAll('.controls .btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('modeLabel').textContent = m.toUpperCase();
+  toast('MODE: '+m.toUpperCase());
+  if(m==='crystal') buildCrystal();
+}
+
+let crystalPoints = [];
+function buildCrystal(){
+  crystalPoints = [];
+  const cx = W/2, cy = H/2;
+  for(let ring=1;ring<=6;ring++){
+    const n = ring*10;
+    for(let i=0;i<n;i++){
+      const ang = (i/n)*Math.PI*2;
+      const r = ring * (Math.min(W,H)*0.07);
+      crystalPoints.push({x:cx+Math.cos(ang)*r, y:cy+Math.sin(ang)*r});
+    }
+  }
+}
+buildCrystal();
+
+function explode(){
+  exploding = true;
+  toast('⚡ QUANTUM DETONATION');
+  particles.forEach(p=>{
+    const dx = p.x-W/2, dy = p.y-H/2;
+    const dist = Math.sqrt(dx*dx+dy*dy)||1;
+    p.vx = (dx/dist)*(Math.random()*15+5);
+    p.vy = (dy/dist)*(Math.random()*15+5);
+  });
+  setTimeout(()=>{exploding=false},2000);
+}
+
+function toggleAttract(){
+  attractMode = !attractMode;
+  document.getElementById('bAttract').classList.toggle('active',attractMode);
+  toast(attractMode?'ATTRACT MODE: ON':'ATTRACT MODE: OFF');
+}
+
+function cycleColor(){
+  paletteIdx=(paletteIdx+1)%PALETTES.length;
+  COLS=[...PALETTES[paletteIdx]];
+  particles.forEach(p=>p.c=COLS[Math.floor(Math.random()*COLS.length)]);
+  toast('SPECTRUM SHIFTED');
+}
+
+// Mouse
+canvas.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY});
+canvas.addEventListener('mousedown',e=>{mouse.down=true;mouse.x=e.clientX;mouse.y=e.clientY});
+canvas.addEventListener('mouseup',()=>mouse.down=false);
+canvas.addEventListener('touchmove',e=>{e.preventDefault();mouse.x=e.touches[0].clientX;mouse.y=e.touches[0].clientY;mouse.down=true},{passive:false});
+canvas.addEventListener('touchend',()=>mouse.down=false);
+
+// Show title briefly
+setTimeout(()=>{
+  document.getElementById('centerInfo').classList.add('show');
+  setTimeout(()=>document.getElementById('centerInfo').classList.remove('show'),3500);
+},500);
+
+let connCount = 0;
+
+function draw(now){
+  requestAnimationFrame(draw);
+  const dt = now - lastTime;
+  lastTime = now;
+  fpsArr.push(1000/dt);
+  if(fpsArr.length>20)fpsArr.shift();
+  fps = Math.round(fpsArr.reduce((a,b)=>a+b)/fpsArr.length);
+  tick++;
+  evolveCount++;
+
+  // Update cluster centers
+  clusters.forEach(cl=>{
+    cl.x+=cl.vx; cl.y+=cl.vy;
+    if(cl.x<0||cl.x>W)cl.vx*=-1;
+    if(cl.y<0||cl.y>H)cl.vy*=-1;
+  });
+
+  ctx.fillStyle='rgba(2,4,10,0.18)';
+  ctx.fillRect(0,0,W,H);
+
+  connCount = 0;
+  
+  // Update & draw particles
+  for(let i=0;i<particles.length;i++){
+    const p = particles[i];
+    p.a += 0.02;
+    p.life += 0.003;
+    p.energy = Math.abs(Math.sin(p.life));
+
+    if(mode==='swarm'){
+      const cl = clusters[p.cluster];
+      const dx=cl.x-p.x, dy=cl.y-p.y;
+      const dist=Math.sqrt(dx*dx+dy*dy)||1;
+      p.vx += (dx/dist)*0.12;
+      p.vy += (dy/dist)*0.12;
+      p.vx += Math.sin(p.a+p.cluster)*0.2;
+      p.vy += Math.cos(p.a*0.7)*0.2;
+      p.vx *= 0.95; p.vy *= 0.95;
+    } else if(mode==='galaxy'){
+      const cx=W/2,cy=H/2;
+      const dx=cx-p.x,dy=cy-p.y;
+      const d=Math.sqrt(dx*dx+dy*dy)||1;
+      const tang=-dy/d,tangy=dx/d;
+      p.vx += dx/d*0.04 + tang*0.5;
+      p.vy += dy/d*0.04 + tangy*0.5;
+      p.vx *= 0.97; p.vy *= 0.97;
+    } else if(mode==='chaos'){
+      p.vx += Math.sin(tick*0.01+p.y*0.02)*0.3;
+      p.vy += Math.cos(tick*0.008+p.x*0.02)*0.3;
+      p.vx += (Math.random()-0.5)*0.4;
+      p.vy += (Math.random()-0.5)*0.4;
+      p.vx *= 0.92; p.vy *= 0.92;
+    } else if(mode==='crystal'){
+      const tp = crystalPoints[i%crystalPoints.length];
+      if(tp){
+        p.vx += (tp.x-p.x)*0.05;
+        p.vy += (tp.y-p.y)*0.05;
+        p.vx += Math.sin(tick*0.03+i)*0.15;
+        p.vy += Math.cos(tick*0.02+i)*0.15;
+        p.vx *= 0.88; p.vy *= 0.88;
+      }
+    }
+
+    if(exploding){p.vx*=0.97;p.vy*=0.97}
+
+    if(mouse.down || attractMode){
+      const dx=mouse.x-p.x,dy=mouse.y-p.y;
+      const d=Math.sqrt(dx*dx+dy*dy)||1;
+      const f = attractMode ? 80 : 120;
+      if(d<f){p.vx+=dx/d*(f-d)*0.04;p.vy+=dy/d*(f-d)*0.04}
+    }
+
+    p.x += p.vx; p.y += p.vy;
+    if(p.x<-20)p.x=W+20;if(p.x>W+20)p.x=-20;
+    if(p.y<-20)p.y=H+20;if(p.y>H+20)p.y=-20;
+
+    // Draw particle
+    const alpha = 0.4 + 0.6*p.energy;
+    const sz = p.r * (0.7+p.energy*0.6);
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,sz,0,Math.PI*2);
+    ctx.fillStyle = p.c;
+    ctx.globalAlpha = alpha;
+    ctx.fill();
+
+    // Glow halo
+    if(p.energy>0.7){
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,sz*3,0,Math.PI*2);
+      ctx.fillStyle = p.c;
+      ctx.globalAlpha = 0.04;
+      ctx.fill();
+    }
+    ctx.globalAlpha=1;
+
+    // Connections
+    if(i%3===0){
+      for(let j=i+1;j<Math.min(i+8,particles.length);j++){
+        const q=particles[j];
+        const dx=p.x-q.x,dy=p.y-q.y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if(d<100){
+          ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);
+          ctx.strokeStyle=p.c;
+          ctx.globalAlpha=(1-d/100)*0.18;
+          ctx.lineWidth=0.4;ctx.stroke();
+          ctx.globalAlpha=1;
+          connCount++;
+        }
+      }
+    }
+  }
+
+  // Update stats
+  if(tick%20===0){
+    document.getElementById('s1').textContent=(MAX/1000).toFixed(1)+'K+';
+    document.getElementById('s2').textContent=connCount;
+    document.getElementById('s3').textContent=evolveCount;
+    document.getElementById('s4').textContent=fps;
+    document.getElementById('hz').textContent='EVOLVING · '+(dt|0)+'ms PER CYCLE';
+  }
+}
+requestAnimationFrame(draw);
+
+// Toast helper
+let toastTimer;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),1800);
+}
+
+// Auto-evolve: shift clusters & occasionally switch mode
+setInterval(()=>{
+  clusters.forEach(cl=>{cl.vx+=(Math.random()-0.5)*0.1;cl.vy+=(Math.random()-0.5)*0.1;cl.vx=Math.max(-1,Math.min(1,cl.vx));cl.vy=Math.max(-1,Math.min(1,cl.vy))});
+},500);
+
+// Random micro-explosions
+setInterval(()=>{
+  if(mode==='chaos'&&Math.random()>0.7){
+    const cx=Math.random()*W,cy=Math.random()*H;
+    particles.forEach(p=>{const dx=p.x-cx,dy=p.y-cy,d=Math.sqrt(dx*dx+dy*dy)||1;if(d<120){p.vx+=(dx/d)*(120-d)*0.05;p.vy+=(dy/d)*(120-d)*0.05}});
+  }
+},2000);
+</script>
+</body>
+</html>
