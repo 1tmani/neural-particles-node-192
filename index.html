@@ -1,37 +1,50 @@
 <!DOCTYPE html>
 <html lang='en'>
 <head>
-<meta charset='UTF-8'><title>CORE | ULTIMATE STABILIZATION</title>
-<link href='https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Michroma&family=Syncopate:wght@400;700&display=swap' rel='stylesheet'>
+<meta charset='UTF-8'><title>STORY | V100 IMMERSIVE PLATFORM</title>
+<link href='https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Michroma&family=Syncopate:wght@700&display=swap' rel='stylesheet'>
 <style>
-:root{ --p:#00f2ff; --s:#7000ff; --bg:#000; }
-body,html{ margin:0; padding:0; background:#000; color:#fff; font-family:'Michroma'; overflow:hidden; height:100vh; }
-canvas{ position:fixed; inset:0; z-index:1; mix-blend-mode: screen; }
-.hud-layer{ position:fixed; top:30px; left:50%; transform:translateX(-50%); z-index:1000; display:flex; gap:20px; background:rgba(0,0,0,0.8); padding:10px 30px; border:1px solid var(--p); border-radius:50px; backdrop-filter:blur(20px); }
-.hud-btn{ background:transparent; border:none; color:#fff; font-family:'Orbitron'; font-size:10px; cursor:pointer; letter-spacing:3px; opacity:0.5; transition:0.3s; }
-.hud-btn.active{ opacity:1; color:var(--p); text-shadow:0 0 10px var(--p); }
-.page{ position:fixed; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10; }
-.page.active{ display:flex; }
-#nexus-title{ font-family:'Orbitron'; font-size:clamp(3rem, 15vw, 10rem); letter-spacing:30px; text-shadow: 0 0 30px var(--p); text-transform:uppercase; }
+:root{ --p:#fff; --bg:#000; }
+body,html{ margin:0; background:#000; color:#fff; font-family:'Michroma'; overflow-x:hidden; scroll-behavior:smooth; }
+canvas{ position:fixed; inset:0; z-index:1; opacity:0.3; }
+
+section{ height:100vh; width:100vw; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:100px; box-sizing:border-box; border-bottom:1px solid rgba(255,255,255,0.05); position:relative; z-index:10; }
+
+.story-hero{ font-family:'Syncopate'; font-weight:700; font-size:clamp(2rem, 10vw, 8rem); letter-spacing:30px; text-transform:uppercase; text-align:center; opacity:0.9; }
+.reveal-block{ width:1px; height:0%; background:#fff; transition:2s cubic-bezier(0.19, 1, 0.22, 1); margin:40px 0; }
+.active .reveal-block{ height:200px; }
+
+.image-block{ width:90%; max-width:1400px; height:70vh; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.02); display:flex; align-items:center; justify-content:center; margin-top:50px; overflow:hidden; position:relative; }
+.image-block::after{ content:''; position:absolute; inset:0; background:linear-gradient(to bottom, transparent, rgba(0,0,0,0.8)); }
+
+.hud-status{ position:fixed; bottom:40px; left:40px; z-index:1000; font-family:Orbitron; font-size:9px; letter-spacing:5px; opacity:0.4; border-bottom:1px solid #fff; padding-bottom:10px; }
 </style>
 </head>
 <body>
-    <nav class='hud-layer'>
-        <button class='hud-btn active' onclick='sw(1)'>NEXUS</button>
-        <button class='hud-btn' onclick='sw(2)'>STABILITY</button>
-    </nav>
-    <canvas id='c'></canvas>
-    <section class='page active' id='p1'><h1 id='nexus-title'>CORE</h1><p style='letter-spacing:10px; opacity:0.4;'>NEURAL_SINGULARITY_STABLE</p></section>
-    <section class='page' id='p2'><div style='border-left:2px solid var(--p); padding-left:30px;'><h2 style='font-family:Orbitron; letter-spacing:5px;'>SYSTEM_INTEGRITY: 100%</h2><p style='opacity:0.6; font-size:12px;'>ALL LAYERS SYNCHRONIZED AND RECOVERED</p></div></section>
-    <script>
-    const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
-    let w,h,t=0,pts=[]; function res(){w=canvas.width=innerWidth;h=canvas.height=innerHeight;} res();
-    for(let i=0;i<300;i++) pts.push({x:Math.random()*w, y:Math.random()*h, z:Math.random()*w, c:Math.random()*360});
-    function sw(id){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('p'+id).classList.add('active'); }
-    function draw(){ t+=0.01; ctx.fillStyle='rgba(0,0,0,0.1)'; ctx.fillRect(0,0,w,h);
-        pts.forEach(p=>{ p.z-=5; if(p.z<=0) p.z=w; let sc=400/p.z; ctx.fillStyle=`hsla(${p.c},100%,70%,${1-p.z/w})`; ctx.beginPath(); ctx.arc((p.x-w/2)*sc+w/2,(p.y-h/2)*sc+h/2,sc,0,Math.PI*2); ctx.fill(); });
-        requestAnimationFrame(draw);
-    } draw();
-    </script>
-</body>
-</html>
+<canvas id='c'></canvas>
+<div class='hud-status'>NODE_08: IMMERSIVE_STORYTELLING_SYSTEM</div>
+<div class='flagship-container'>
+    <section class='active'>
+        <h1 class='story-hero'>VISIBLE<br>HISTORY</h1>
+        <div class='reveal-block'></div>
+        <p style='font-size:12px; letter-spacing:10px; opacity:0.5;'>[ ARCHIVING_NEURAL_LEGACY ]</p>
+    </section>
+    <section>
+        <div class='image-block'>
+            <h2 style='font-family:Orbitron; letter-spacing:20px; opacity:0.1; font-size:6rem;'>CHRONICLE</h2>
+        </div>
+        <p style='max-width:800px; text-align:center; line-height:2.5; margin-top:40px; opacity:0.6;'>A high-fidelity platform for deep image-led storytelling. Every section utilizes breathing light transitions to guide the observer through the network's evolution.</p>
+    </section>
+</div>
+<script>
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+let w,h,t=0; function res(){w=canvas.width=innerWidth;h=canvas.height=innerHeight;}res();
+function draw(){t+=0.01;ctx.fillStyle='rgba(0,0,0,0.15)';ctx.fillRect(0,0,w,h);ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=0.5;
+for(let i=0;i<5;i++){ctx.beginPath();ctx.arc(w/2,h/2,100+i*50+Math.sin(t+i)*20,0,Math.PI*2);ctx.stroke();}requestAnimationFrame(draw);}draw();
+window.addEventListener('scroll', () => {
+    document.querySelectorAll('section').forEach(s => {
+        const rect = s.getBoundingClientRect();
+        if(rect.top < window.innerHeight/2 && rect.bottom > window.innerHeight/2) s.classList.add('active');
+    });
+});
+</script></body></html>
